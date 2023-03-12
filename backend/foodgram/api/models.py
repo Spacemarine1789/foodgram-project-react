@@ -12,7 +12,7 @@ class User(AbstractUser):
 
     first_name = models.CharField(verbose_name='first name', max_length=256)
     last_name = models.CharField(verbose_name='last name', max_length=256)
-    email = models.EmailField(verbose_name='email address', max_length=256)
+    email = models.EmailField(verbose_name='email address', max_length=256, unique=True)
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
@@ -22,31 +22,18 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
-        constraints = [
-            models.UniqueConstraint(
-                fields=['email'],
-                name='unique_email'
-            )
-        ]
-
 
 class Tag(models.Model):
     name = models.CharField(
-        verbose_name='Тег',
-        max_length=MAX_LEN_CHARFILD
+        verbose_name='Тег', max_length=MAX_LEN_CHARFILD, unique=True
     )
-    color = models.CharField(max_length=7)
-    slug = models.SlugField(max_length=MAX_LEN_CHARFILD)
+    color = models.CharField(max_length=7, unique=True)
+    slug = models.SlugField(max_length=MAX_LEN_CHARFILD, unique=True)
 
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['slug', 'color'],
-                name='unique_tag'
-            )
-        ]
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -69,6 +56,7 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ('name',)
         constraints = [
             models.UniqueConstraint(
                 fields=['name', 'measurement_unit'],
@@ -88,24 +76,18 @@ class Recipe(models.Model):
         max_length=MAX_LEN_CHARFILD, verbose_name='Название',
     )
     image = models.ImageField(
-        upload_to='recipes/', blank=True, null=True, max_length=5000,
+        upload_to='recipes/', max_length=5000,
     )
-    text = models.TextField(
-        blank=True, null=True, verbose_name='Текст',
-    )
+    text = models.TextField(verbose_name='Текст',)
     ingredients = models.ManyToManyField(
         Ingredient,
         related_name='recipes',
-        blank=True,
-        null=True,
         verbose_name='Ингридиент',
         through='api.RecipeIngredient',
     )
     tags = models.ManyToManyField(
         Tag,
         related_name='recipes',
-        blank=True,
-        null=True,
         verbose_name='Тег',
     )
     cooking_time = models.IntegerField(
@@ -117,6 +99,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.name
