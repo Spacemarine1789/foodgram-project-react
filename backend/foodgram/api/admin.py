@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from .models import (
     FavoriteRecipe, Follow, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCartRecipe, Tag,
+    ShoppingCartRecipe, Tag, User,
 )
 
 
@@ -73,6 +73,7 @@ class FollowAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
+admin.site.register(User, CustomAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)

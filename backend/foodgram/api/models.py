@@ -1,16 +1,42 @@
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from .validators import hex_color_validator
 
-User = get_user_model()
+MAX_LEN_CHARFILD = 64
+MAX_COOKING_TIME = 3600
+MAX_AMOUNT = 128
+
+
+class User(AbstractUser):
+
+    first_name = models.CharField(verbose_name='first name', max_length=256)
+    last_name = models.CharField(verbose_name='last name', max_length=256)
+    email = models.EmailField(verbose_name='email address', max_length=256)
+
+    EMAIL_FIELD = 'email'
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['email'],
+                name='unique_email'
+            )
+        ]
 
 
 class Tag(models.Model):
-    name = models.TextField(
+    name = models.CharField(
         verbose_name='Тег',
+        max_length=MAX_LEN_CHARFILD
     )
-    color = models.CharField(max_length=10)
-    slug = models.SlugField()
+    color = models.CharField(max_length=7)
+    slug = models.SlugField(max_length=MAX_LEN_CHARFILD)
 
     class Meta:
         verbose_name = 'Тег'
@@ -25,13 +51,18 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+    def clean(self) -> None:
+        self.color = hex_color_validator(self.color)
+        return super().clean()
+
 
 class Ingredient(models.Model):
-    name = models.TextField(
+    name = models.CharField(
+        max_length=MAX_LEN_CHARFILD,
         verbose_name='Ингредиент',
     )
     measurement_unit = models.CharField(
-        max_length=100,
+        max_length=32,
         verbose_name='Единица измерения'
     )
 
@@ -42,7 +73,7 @@ class Ingredient(models.Model):
             models.UniqueConstraint(
                 fields=['name', 'measurement_unit'],
                 name='unique_ingredient'
-            )
+            ),
         ]
 
     def __str__(self):
@@ -54,10 +85,10 @@ class Recipe(models.Model):
         User, on_delete=models.CASCADE, related_name='recipes'
     )
     name = models.CharField(
-        max_length=200, verbose_name='Рецепт',
+        max_length=MAX_LEN_CHARFILD, verbose_name='Название',
     )
     image = models.ImageField(
-        upload_to='recipes/', blank=True, null=True,
+        upload_to='recipes/', blank=True, null=True, max_length=5000,
     )
     text = models.TextField(
         blank=True, null=True, verbose_name='Текст',
@@ -68,6 +99,7 @@ class Recipe(models.Model):
         blank=True,
         null=True,
         verbose_name='Ингридиент',
+        through='api.RecipeIngredient',
     )
     tags = models.ManyToManyField(
         Tag,
@@ -78,7 +110,7 @@ class Recipe(models.Model):
     )
     cooking_time = models.IntegerField(
         verbose_name='Длительность',
-        validators=[MinValueValidator(0)]
+        validators=[MinValueValidator(0), MaxValueValidator(MAX_COOKING_TIME)]
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
@@ -95,15 +127,21 @@ class RecipeIngredient(models.Model):
         Recipe, on_delete=models.CASCADE, related_name='amount'
     )
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE, related_name='amount'
+        Ingredient, on_delete=models.CASCADE, related_name='ingamount'
     )
     amount = models.IntegerField(
         verbose_name='Количество',
-        validators=[MinValueValidator(0)]
+        validators=[MinValueValidator(0), MaxValueValidator(MAX_AMOUNT)]
     )
 
     class Meta:
         verbose_name = 'Количество ингредиента в рецепте'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_amount'
+            )
+        ]
 
 
 class ShoppingCartRecipe(models.Model):
@@ -116,6 +154,12 @@ class ShoppingCartRecipe(models.Model):
 
     class Meta:
         verbose_name = 'Рецепт в корзине для покупок'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_recipe_in_cart'
+            )
+        ]
 
 
 class FavoriteRecipe(models.Model):
@@ -128,6 +172,12 @@ class FavoriteRecipe(models.Model):
 
     class Meta:
         verbose_name = 'Рецепт в списке избраных'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite_recipe'
+            )
+        ]
 
 
 class Follow(models.Model):
@@ -140,3 +190,9 @@ class Follow(models.Model):
 
     class Meta:
         verbose_name = 'Автор в списке отслеживыемых'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscription'
+            )
+        ]

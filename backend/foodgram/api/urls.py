@@ -1,16 +1,20 @@
 from django.urls import include, path
-# from rest_framework.routers import DefaultRouter
-# from .views import (
-#     FavoriteViewSet, FollowListViewSet, FollowViewSet, IngredientViewSet,
-#     RecipeViewSet, ShoppingCartViewSet, TagViewSet, UserRetrieve,
-# )
+from rest_framework.routers import DefaultRouter
+from .views import (
+    IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet
+)
 
 app_name = 'api'
 
 
+v1_router = DefaultRouter()
+v1_router.register(r'tags', TagViewSet)
+v1_router.register(r'ingredients', IngredientViewSet)
+v1_router.register(r'recipes', RecipeViewSet)
+v1_router.register(r'users', UserViewSet)
+
+
 urlpatterns = [
-    path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
-    # path('users/<int:pk>/', UserRetrieve.as_view()),
-    # path('', include(v1_router.urls)),
+    path('', include(v1_router.urls)),
 ]

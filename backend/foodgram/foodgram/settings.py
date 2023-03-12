@@ -25,7 +25,7 @@ SECRET_KEY = 'z3b!!%=&212*)@y966b^^df)(o_j4is5f&i%_=3)sq9!=bo=bo'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'sorl.thumbnail',
-    'rest_framework.authtoken',
     'rest_framework',
+    'rest_framework.authtoken',
     'django_filters',
     'djoser',
     'api',
@@ -105,7 +105,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -128,6 +127,13 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'api.User'
+
 # DRF settings
 
 REST_FRAMEWORK = {
@@ -138,9 +144,20 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
     'PAGE_SIZE': 10,
+}
 
+DJOSER = {
+    'HIDE_USERS': False,
+    'PERMISSIONS': {
+        'user': ('rest_framework.permissions.IsAuthenticated',),
+        'user_list': ('rest_framework.permissions.AllowAny',),
+    },
+    'SERIALIZERS': {
+        'current_user': 'api.serializers.UserSerializer',
+        'user': 'api.serializers.UserSerializer',
+    },
 }
 
 if DEBUG:
