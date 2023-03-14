@@ -2,10 +2,11 @@ import base64
 from django.core.files.base import ContentFile
 from django.db.models import F
 from rest_framework import serializers
-from .models import (
+from recipes.models import (
     FavoriteRecipe, Follow, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCartRecipe, Tag, User
+    ShoppingCartRecipe, Tag
 )
+from users.models import User
 from .validators import tags_exist_validator, ingredients_exist_validator
 
 
@@ -140,10 +141,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         for ingredient in ingredients:
-            RecipeIngredient.objects.get_or_create(
-                recipe=recipe, ingredient=ingredient['ingredient'],
-                amount=int(ingredient['amount'])
-            )
+            RecipeIngredient.objects.bulk_create([
+                RecipeIngredient(
+                    recipe=recipe, ingredient=ingredient['ingredient'],
+                    amount=int(ingredient['amount']) 
+                )
+            ])
         return recipe
 
     def update(self, instance, validated_data):
@@ -161,9 +164,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         if ingredients:
             instance.ingredients.clear()
             for ingredient in ingredients:
-                RecipeIngredient.objects.get_or_create(
-                    recipe=instance, ingredient=ingredient['ingredient'],
-                    amount=int(ingredient['amount'])
-                )
+                RecipeIngredient.objects.bulk_create([
+                    RecipeIngredient(
+                        recipe=instance, ingredient=ingredient['ingredient'],
+                        amount=int(ingredient['amount'])
+                    )
+                ])
 
         return super().update(instance, validated_data)

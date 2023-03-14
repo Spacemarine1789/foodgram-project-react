@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django.http.response import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import viewsets
@@ -6,14 +5,15 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST)
+from recipes.models import (
+    Ingredient, FavoriteRecipe, Follow, Recipe, ShoppingCartRecipe, Tag
+)
+from users.models import User
 from .filters import (
     AuthorListFilterBackend, IsFavoritedFilterBackend,
     IsInShoppingCartFilterBackend,
 )
 from .mixins import add_del_act
-from .models import (
-    Ingredient, FavoriteRecipe, Follow, Recipe, ShoppingCartRecipe, Tag, User
-)
 from .permissions import IsStaffOrAuthorOrReadOnly
 from .serializers import (
     IngredientSerializer, RecipeSerializer, TagSerializer,

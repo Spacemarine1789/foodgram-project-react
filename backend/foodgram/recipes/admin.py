@@ -1,14 +1,14 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from .models import (
     FavoriteRecipe, Follow, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCartRecipe, Tag, User,
+    ShoppingCartRecipe, Tag, RecipeIngredient
 )
 
 
-class CustomAdmin(UserAdmin):
-    pass
+class RecipeIngredientInline(admin.StackedInline):
+    model = RecipeIngredient
+    min_num = 1
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -28,6 +28,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class RecipeAdmin(admin.ModelAdmin):
+    inlines = (RecipeIngredientInline,)
     list_display = (
         'id', 'author', 'name', 'text', 'cooking_time', 'pub_date',
     )
@@ -73,7 +74,6 @@ class FollowAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(User, CustomAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)

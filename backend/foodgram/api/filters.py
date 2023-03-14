@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, exceptions
-from .models import User, Recipe
+from recipes.models import Recipe
+from users.models import User
 
 
 class IsFavoritedFilterBackend(filters.BaseFilterBackend):

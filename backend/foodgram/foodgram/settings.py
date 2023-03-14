@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django_filters',
     'djoser',
     'api',
+    'recipes',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -132,7 +134,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'users.User'
 
 # DRF settings
 

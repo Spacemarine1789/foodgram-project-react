@@ -1,26 +1,11 @@
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from users.models import User
 from .validators import hex_color_validator
 
 MAX_LEN_CHARFILD = 64
 MAX_COOKING_TIME = 3600
 MAX_AMOUNT = 128
-
-
-class User(AbstractUser):
-
-    first_name = models.CharField(verbose_name='first name', max_length=256)
-    last_name = models.CharField(verbose_name='last name', max_length=256)
-    email = models.EmailField(verbose_name='email address', max_length=256, unique=True)
-
-    EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
 
 
 class Tag(models.Model):
@@ -45,12 +30,10 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        max_length=MAX_LEN_CHARFILD,
-        verbose_name='Ингредиент',
+        max_length=MAX_LEN_CHARFILD, verbose_name='Ингредиент',
     )
     measurement_unit = models.CharField(
-        max_length=32,
-        verbose_name='Единица измерения'
+        max_length=32, verbose_name='Единица измерения'
     )
 
     class Meta:
@@ -80,15 +63,11 @@ class Recipe(models.Model):
     )
     text = models.TextField(verbose_name='Текст',)
     ingredients = models.ManyToManyField(
-        Ingredient,
-        related_name='recipes',
-        verbose_name='Ингридиент',
+        Ingredient, related_name='recipes', verbose_name='Ингридиент',
         through='api.RecipeIngredient',
     )
     tags = models.ManyToManyField(
-        Tag,
-        related_name='recipes',
-        verbose_name='Тег',
+        Tag, related_name='recipes', verbose_name='Тег',
     )
     cooking_time = models.IntegerField(
         verbose_name='Длительность',
@@ -116,6 +95,7 @@ class RecipeIngredient(models.Model):
         verbose_name='Количество',
         validators=[MinValueValidator(0), MaxValueValidator(MAX_AMOUNT)]
     )
+    add_date = models.DateTimeField('Дата создания', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Количество ингредиента в рецепте'
@@ -125,6 +105,13 @@ class RecipeIngredient(models.Model):
                 name='unique_amount'
             )
         ]
+        ordering = ('-add_date',)
+
+    def __str__(self):
+        return (
+            f'В рецепте {self.recipe} содержится {self.ingredient}'
+            f' в следующем количестве: {self.amount}'
+        )
 
 
 class ShoppingCartRecipe(models.Model):
@@ -134,6 +121,7 @@ class ShoppingCartRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name='shopping_cart',
     )
+    add_date = models.DateTimeField('Дата создания', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Рецепт в корзине для покупок'
@@ -143,6 +131,13 @@ class ShoppingCartRecipe(models.Model):
                 name='unique_recipe_in_cart'
             )
         ]
+        ordering = ('-add_date',)
+
+    def __str__(self):
+        return (
+            f'Рецепт {self.recipe} находится в корзине'
+            f' этого полльзователя {self.user}'
+        )
 
 
 class FavoriteRecipe(models.Model):
@@ -152,6 +147,7 @@ class FavoriteRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name='favorite',
     )
+    add_date = models.DateTimeField('Дата создания', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Рецепт в списке избраных'
@@ -161,6 +157,13 @@ class FavoriteRecipe(models.Model):
                 name='unique_favorite_recipe'
             )
         ]
+        ordering = ('-add_date',)
+
+    def __str__(self):
+        return (
+            f'Рецепт {self.recipe} находится в избраных'
+            f' этого полльзователя {self.user}'
+        )
 
 
 class Follow(models.Model):
@@ -170,6 +173,7 @@ class Follow(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='following',
     )
+    add_date = models.DateTimeField('Дата создания', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Автор в списке отслеживыемых'
@@ -179,3 +183,10 @@ class Follow(models.Model):
                 name='unique_subscription'
             )
         ]
+        ordering = ('-add_date',)
+
+    def __str__(self):
+        return (
+            f'Автор {self.author} находится в отслеживаемых'
+            f' этого полльзователя {self.user}'
+        )
