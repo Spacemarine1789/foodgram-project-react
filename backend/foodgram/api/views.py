@@ -11,7 +11,7 @@ from recipes.models import (
 from users.models import User
 from .filters import (
     AuthorListFilterBackend, IsFavoritedFilterBackend,
-    IsInShoppingCartFilterBackend,
+    IsInShoppingCartFilterBackend, TagListFilterBackend
 )
 from .mixins import add_del_act
 from .permissions import IsStaffOrAuthorOrReadOnly
@@ -59,7 +59,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsStaffOrAuthorOrReadOnly,)
     filter_backends = (
         AuthorListFilterBackend, IsFavoritedFilterBackend,
-        IsInShoppingCartFilterBackend,
+        IsInShoppingCartFilterBackend, TagListFilterBackend,
     )
 
     def perform_create(self, serializer):
@@ -71,7 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if user.is_anonymous:
             raise ValidationError()
         if not user.shopping_cart.exists():
-            mes = "You have no recipes in carts"
+            mes = 'You have no recipes in carts'
             return Response(data=mes, status=HTTP_400_BAD_REQUEST)
         filename = f'{user.username}_shopping_list.txt'
         shopping_list = [

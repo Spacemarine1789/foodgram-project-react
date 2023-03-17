@@ -7,7 +7,11 @@ from recipes.models import (
     ShoppingCartRecipe, Tag
 )
 from users.models import User
-from .validators import tags_exist_validator, ingredients_exist_validator
+from .validators import (
+    amount_validator, tags_exist_validator,
+    tags_ingredients_not_null_validator, unique_ingredients_validator,
+    unique_tags_validator,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,6 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class Base64ImageField(serializers.ImageField):
+    """"Field for images in base64 encoding"""
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
@@ -39,6 +44,7 @@ class Base64ImageField(serializers.ImageField):
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
+    """"Alternate serializer for Recipe model read only"""
     image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
@@ -50,6 +56,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeSerializer(UserSerializer):
+    """"Serializer for User model in subscriptions endpoint"""
     recipes = ShortRecipeSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
@@ -127,8 +134,12 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
         tags = self.initial_data.get('tags')
+        tags_ingredients_not_null_validator(tags)
         tags_exist_validator(tags, Tag)
-        ingredients = ingredients_exist_validator(ingredients, Ingredient)
+        unique_tags_validator(tags)
+        tags_ingredients_not_null_validator(ingredients)
+        unique_ingredients_validator(ingredients)
+        amount_validator(ingredients)
         data.update({
             'ingredients': ingredients,
             'tags': tags
@@ -140,13 +151,18 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
+        recipe_ingredients = []
         for ingredient in ingredients:
-            RecipeIngredient.objects.bulk_create([
+            recipe_ingredients.append(
                 RecipeIngredient(
-                    recipe=recipe, ingredient=ingredient['ingredient'],
-                    amount=int(ingredient['amount']) 
+                    recipe=recipe,
+                    ingredient=Ingredient.objects.get(
+                        id=int(ingredient['id'])
+                    ),
+                    amount=int(ingredient['amount'])
                 )
-            ])
+            )
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return recipe
 
     def update(self, instance, validated_data):
@@ -163,12 +179,17 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         if ingredients:
             instance.ingredients.clear()
+            recipe_ingredients = []
             for ingredient in ingredients:
-                RecipeIngredient.objects.bulk_create([
+                recipe_ingredients.append(
                     RecipeIngredient(
-                        recipe=instance, ingredient=ingredient['ingredient'],
+                        recipe=instance,
+                        ingredient=Ingredient.objects.get(
+                            id=int(ingredient['id'])
+                        ),
                         amount=int(ingredient['amount'])
                     )
-                ])
+                )
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
         return super().update(instance, validated_data)

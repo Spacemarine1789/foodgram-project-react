@@ -1,32 +1,44 @@
-from django.core.exceptions import ValidationError
+from rest_framework.serializers import ValidationError
+from recipes.models import MIN_AMOUNT, MAX_AMOUNT
 
 
 def tags_exist_validator(tags_ids, Tag) -> None:
     """Check existing tags with specified tags_ids"""
-
     exists_tags = Tag.objects.filter(id__in=tags_ids)
     if len(exists_tags) != len(tags_ids):
-        raise ValidationError('Указан несуществующий тэг')
+        raise ValidationError('Указан несуществующий тег')
 
 
-def ingredients_exist_validator(ingredients, Ingredient):
-    """Check existing ingredients with specified ingredients_ids"""
+def tags_ingredients_not_null_validator(values):
+    """Check that values exists in request"""
+    if len(values) < 1:
+        raise ValidationError('Добавьте хотя бы один ингредиент и тег.')
+    return values
 
-    ings_ids = [None] * len(ingredients)
 
-    for idx, ing in enumerate(ingredients):
-        ingredients[idx]['amount'] = int(ingredients[idx]['amount'])
-        if ingredients[idx]['amount'] < 1:
-            raise ValidationError('Неправильное количество ингидиента')
-        ings_ids[idx] = ing.pop('id', 0)
+def unique_ingredients_validator(ingredients):
+    """Check that ingredients in request are unique"""
+    if len(ingredients) > len({item['id'] for item in ingredients}):
+        raise ValidationError('Ингредиенты должны быть уникальные.')
+    return ingredients
 
-    ings_in_db = Ingredient.objects.filter(id__in=ings_ids).order_by('pk')
-    ings_ids.sort()
 
-    for idx, id in enumerate(ings_ids):
-        ingredient: 'Ingredient' = ings_in_db[idx]
-        if ingredient.id != id:
-            raise ValidationError('Ингридент не существует')
+def unique_tags_validator(tags):
+    """Check that tags in request are unique"""
+    if len(tags) > len(set(tags)):
+        raise ValidationError('Теги должны быть уникальные.')
+    return tags
 
-        ingredients[idx]['ingredient'] = ingredient
+
+def amount_validator(ingredients):
+    """Check amount of ingredients"""
+    for item in ingredients:
+        if int(item['amount']) < MIN_AMOUNT:
+            raise ValidationError(
+                f'Количество ингредиента должно быть больше {MIN_AMOUNT}'
+            )
+        if int(item['amount']) > MAX_AMOUNT:
+            raise ValidationError(
+                f'Количество ингредиента должно быть меньше {MAX_AMOUNT}'
+            )
     return ingredients

@@ -8,6 +8,10 @@ from users.models import User
 
 
 def add_del_act(request, id, model, query, ser):
+    """
+    Method for creating or deleting models:
+    Follow, FavoriteRecipe, ShoppingCartRecipe
+    """
     if request.user.is_anonymous:
         return Response(status=HTTP_401_UNAUTHORIZED)
     q_obj = get_object_or_404(query, id=id)
@@ -19,6 +23,10 @@ def add_del_act(request, id, model, query, ser):
         serializer = ser(q_obj)
         return Response(serializer.data, status=HTTP_201_CREATED)
     if request.method == 'DELETE':
+        if query == User:
+            obj = model.objects.get(user=request.user, author=q_obj)
+        else:
+            obj = model.objects.get(user=request.user, recipe=q_obj)
         obj.delete()
         return Response(status=HTTP_204_NO_CONTENT)
     return Response(data='Bad Requst', status=HTTP_400_BAD_REQUEST)

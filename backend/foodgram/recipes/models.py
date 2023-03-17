@@ -5,7 +5,8 @@ from .validators import hex_color_validator
 
 MAX_LEN_CHARFILD = 64
 MAX_COOKING_TIME = 3600
-MAX_AMOUNT = 128
+MIN_AMOUNT = 1
+MAX_AMOUNT = 999999
 
 
 class Tag(models.Model):
@@ -64,7 +65,7 @@ class Recipe(models.Model):
     text = models.TextField(verbose_name='Текст',)
     ingredients = models.ManyToManyField(
         Ingredient, related_name='recipes', verbose_name='Ингридиент',
-        through='api.RecipeIngredient',
+        through='recipes.RecipeIngredient',
     )
     tags = models.ManyToManyField(
         Tag, related_name='recipes', verbose_name='Тег',
@@ -93,7 +94,7 @@ class RecipeIngredient(models.Model):
     )
     amount = models.IntegerField(
         verbose_name='Количество',
-        validators=[MinValueValidator(0), MaxValueValidator(MAX_AMOUNT)]
+        validators=[MinValueValidator(MIN_AMOUNT), MaxValueValidator(MAX_AMOUNT)]
     )
     add_date = models.DateTimeField('Дата создания', auto_now_add=True)
 
