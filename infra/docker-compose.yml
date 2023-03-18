@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+      - static_value:/app/build/static/
+      - media_value:/app/build/media/
 
   db:
     image: postgres:13.0-alpine

@@ -1,0 +1,20 @@
+[
+    {
+        "model": "recipes.tag",
+        "id": 1,
+        "fields": {
+            "name": "tag1",
+            "color": "#000001",
+            "slug": "tag1"
+        }
+    },
+    {
+        "model": "recipes.tag",
+        "id": 2,
+        "fields": {
+            "name": "tag2",
+            "color": "#fffffe",
+            "slug": "tag2"
+        }
+    }
+]
