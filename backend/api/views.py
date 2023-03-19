@@ -10,8 +10,8 @@ from recipes.models import (
 )
 from users.models import User
 from .filters import (
-    AuthorListFilterBackend, IsFavoritedFilterBackend,
-    IsInShoppingCartFilterBackend, TagListFilterBackend
+    AuthorListFilterBackend,
+    IsInShoppingCartFilterBackend, TagListAndFavoriteFilterBackend
 )
 from .mixins import add_del_act
 from .permissions import IsStaffOrAuthorOrReadOnly
@@ -58,9 +58,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     permission_classes = (IsStaffOrAuthorOrReadOnly,)
     filter_backends = (
-        AuthorListFilterBackend, IsFavoritedFilterBackend,
-        IsInShoppingCartFilterBackend,
-    ) or (TagListFilterBackend,)
+        AuthorListFilterBackend,
+        IsInShoppingCartFilterBackend, TagListAndFavoriteFilterBackend,
+    )
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

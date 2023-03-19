@@ -4,19 +4,6 @@ from recipes.models import Recipe, Tag
 from users.models import User
 
 
-class IsFavoritedFilterBackend(filters.BaseFilterBackend):
-    """
-    Backend for filtering recipes by they M2M relation with
-    FavoriteRecipe Model
-    """
-    def filter_queryset(self, request, queryset, view):
-        if request.query_params.get('is_favorited', '0') == '1':
-            if request.user.is_anonymous:
-                raise exceptions.ValidationError
-            return Recipe.objects.filter(favorite__user=request.user)
-        return queryset
-
-
 class IsInShoppingCartFilterBackend(filters.BaseFilterBackend):
     """
     Backend for filtering recipes by they M2M relation with
@@ -43,12 +30,18 @@ class AuthorListFilterBackend(filters.BaseFilterBackend):
         return author.recipes.all()
 
 
-class TagListFilterBackend(filters.BaseFilterBackend):
+class TagListAndFavoriteFilterBackend(filters.BaseFilterBackend):
     """
     Backend for filtering recipes tags by slug field
     """
     def filter_queryset(self, request, queryset, view):
         tag_slug = request.query_params.getlist('tags')
+        if request.query_params.get('is_favorited') == '1':
+            if request.user.is_anonymous:
+                raise exceptions.ValidationError
+            if len(tag_slug) == 0:
+                return Recipe.objects.filter(favorite__user=request.user)
+            return Recipe.objects.filter(tags__slug__in=tag_slug, favorite__user=request.user).distinct()
         if len(tag_slug) == 0:
             return queryset
         return Recipe.objects.filter(tags__slug__in=tag_slug).distinct()
