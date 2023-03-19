@@ -13,15 +13,14 @@ class IsFavoritedFilterBackend(filters.BaseFilterBackend):
         if request.query_params.get('is_favorited', '0') == '1':
             if request.user.is_anonymous:
                 raise exceptions.ValidationError
-            favorite = request.user.favorite.all()
-            return Recipe.objects.filter(favorite__in=favorite)
+            return Recipe.objects.filter(favorite__user=request.user)
         return queryset
 
 
 class IsInShoppingCartFilterBackend(filters.BaseFilterBackend):
     """
     Backend for filtering recipes by they M2M relation with
-    ShoppingCartRecipe Model 
+    ShoppingCartRecipe Model
     """
     def filter_queryset(self, request, queryset, view):
         if request.query_params.get('is_in_shopping_cart', '0') == '1':
@@ -49,8 +48,7 @@ class TagListFilterBackend(filters.BaseFilterBackend):
     Backend for filtering recipes tags by slug field
     """
     def filter_queryset(self, request, queryset, view):
-        tag_slug = request.query_params.get('tags', None)
-        if tag_slug is None:
+        tag_slug = request.query_params.getlist('tags')
+        if len(tag_slug) == 0:
             return queryset
-        tag = get_object_or_404(Tag, slug=tag_slug)
-        return tag.recipes.all()
+        return Recipe.objects.filter(tags__slug__in=tag_slug).distinct()

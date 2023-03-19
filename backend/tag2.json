@@ -3,18 +3,27 @@
         "model": "recipes.tag",
         "id": 1,
         "fields": {
-            "name": "tag1",
+            "name": "breakfast",
             "color": "#000001",
-            "slug": "tag1"
+            "slug": "breakfast"
         }
     },
     {
         "model": "recipes.tag",
         "id": 2,
         "fields": {
-            "name": "tag2",
-            "color": "#fffffe",
-            "slug": "tag2"
+            "name": "dinner",
+            "color": "#cc0000",
+            "slug": "dinner"
+        }
+    },
+    {
+        "model": "recipes.tag",
+        "id": 3,
+        "fields": {
+            "name": "lunch",
+            "color": "#000080",
+            "slug": "lunch"
         }
     }
 ]

@@ -59,8 +59,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsStaffOrAuthorOrReadOnly,)
     filter_backends = (
         AuthorListFilterBackend, IsFavoritedFilterBackend,
-        IsInShoppingCartFilterBackend, TagListFilterBackend,
-    )
+        IsInShoppingCartFilterBackend,
+    ) or (TagListFilterBackend,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
